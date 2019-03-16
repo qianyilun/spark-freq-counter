@@ -9,6 +9,9 @@ import java.io.File;
 public class WikipediaPopular {
 
     public static void main(String[] args) {
+    	int processors = Runtime.getRuntime().availableProcessors();
+        System.out.println("CPU cores: " + processors);
+        
         String base = "./src/main/resources/";
         String folderName1 = "pagecounts-with-time-1/";
         String folderName2 = "pagecounts-with-time-2/";
