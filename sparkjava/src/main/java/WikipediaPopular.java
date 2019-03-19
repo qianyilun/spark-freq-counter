@@ -10,8 +10,7 @@ public class WikipediaPopular {
 
     public static void main(String[] args) {
     	int processors = Runtime.getRuntime().availableProcessors();
-        System.out.println("CPU cores: " + processors);
-        
+
         String base = "./src/main/resources/";
         String folderName1 = "pagecounts-with-time-1/";
         String folderName2 = "pagecounts-with-time-2/";
@@ -26,6 +25,8 @@ public class WikipediaPopular {
 
         SparkConf sparkConf = new SparkConf().setAppName("WikipediaPopular.counts").setMaster("local");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
+
+        long start = System.currentTimeMillis();
 
         for (File file : listOfFiles1) {
             if (file.isFile()) {
@@ -42,6 +43,10 @@ public class WikipediaPopular {
                 System.out.println("Directory " + file);
             }
         }
+
+        long end = System.currentTimeMillis();
+
+        System.out.println(String.format("Total time with %d cores CPU is %s ms", processors, end - start));
     }
 
     private static void countPopular(String filePath, String outputPath, JavaSparkContext sc) {
@@ -60,11 +65,21 @@ public class WikipediaPopular {
                 .mapToPair(values -> {
                     String date = values[0];
                     int visits = Integer.parseInt(values[3]);
-                    return new Tuple2(date, visits);
+                    String title = values[2];
+                    return new Tuple2(date, new Tuple2(title, visits));
                 })
-                .reduceByKey((a, b) -> Math.max((int) a, (int) b)).sortByKey().map((Function) kv -> {
+                .reduceByKey((Object a, Object b) -> {
+                    Tuple2 t1 = (Tuple2) a;
+                    Tuple2 t2 = (Tuple2) b;
+                    if ((int)t1._2() >= (int)t2._2()) {
+                        return t1;
+                    }
+                    return t2;
+                })
+                .sortByKey().map((Function) kv -> {
             Tuple2 t = (Tuple2) kv;
-            return String.format("%s\t%s", t._1, t._2);
+            Tuple2 t2 = (Tuple2) t._2();
+            return String.format("%s\t(%s, '%s')", t._1, t2._2(), t2._1());
         })
                 .saveAsTextFile("./src/main/out/" + outputPath);
     }
