@@ -16,7 +16,7 @@ to convert the view count to an integer (.map())
 6. Sort so the records are sorted by key (.sortBy())
 7. Save as text output (see hints below).
 
-## Low-core processor VS high-core processor
+## Low-core Processor VS High-core Processor Perofrmance
 
 * High Core
 
